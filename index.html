@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Day Tracker</title>
+    <meta name="theme-color" content="#0b081f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Day Tracker" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -27,6 +36,55 @@
         <button>Aktivität hinzufügen</button>
       </div>
     </div>
+
+    <!-- PWA Install Banner -->
+    <div id="install-banner">
+      <span class="material-symbols-outlined">install_mobile</span>
+      <span>App installieren</span>
+      <button id="install-btn">Installieren</button>
+      <button id="install-dismiss" aria-label="Schließen">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
     <script src="script.js"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/day-tracker/sw.js")
+            .then((r) => console.log("SW registered:", r.scope))
+            .catch((e) => console.warn("SW failed:", e));
+        });
+      }
+
+      let deferredPrompt = null;
+      const banner = document.getElementById("install-banner");
+      const installBtn = document.getElementById("install-btn");
+      const dismissBtn = document.getElementById("install-dismiss");
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        banner.classList.add("visible");
+      });
+
+      installBtn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        banner.classList.remove("visible");
+      });
+
+      dismissBtn.addEventListener("click", () => {
+        banner.classList.remove("visible");
+      });
+
+      window.addEventListener("appinstalled", () => {
+        banner.classList.remove("visible");
+        deferredPrompt = null;
+      });
+    </script>
   </body>
 </html>
